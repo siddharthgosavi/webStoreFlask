@@ -1,5 +1,6 @@
 const apiUrl = "http://localhost:5000/api/products";
 var cartData = [];
+
 async function fetchProducts() {
   try {
     const response = await fetch(apiUrl);
@@ -17,7 +18,7 @@ async function fetchProducts() {
     });
     displayProducts(products);
   } catch (error) {
-    console.error("Error fetching products:", error);
+    console.log("Error fetching products:", error);
   }
 }
 
@@ -115,6 +116,8 @@ function addToCart() {
     image: document.getElementById("modal-product-image").src
   });
 
+  localStorage.setItem("cartData", JSON.stringify(cartData));
+
   alert(document.getElementById("modal-product-name").innerText + " added to Cart!!");
   cartData.map(cart => {
     // Usage:
@@ -207,4 +210,74 @@ function removeFromCart(product) {
     const parentCart = document.getElementById("parent-cart");
     parentCart.appendChild(newListItem);
   });
+
+  localStorage.setItem("cartData", JSON.stringify(cartData));
+}
+
+function setupCheckout() {
+  console.log(cartData);
+  const cartItemsContainer = document.getElementById("shopping-cart"); // Replace with your container selector
+  var subtotal = 0;
+  var tax = 0;
+  var shipping = 0;
+  var total = 0;
+  var cartItems = localStorage.getItem("cartData");
+  cartItems = JSON.parse(cartItems);
+  const cartItemElements = cartItems.map(item => {
+    subtotal += Number(item.price);
+    const cartItem = document.createElement("div");
+    cartItem.classList.add("flex", "items-start", "justify-between", "gap-4", "py-8");
+
+    const productDetails = document.createElement("div");
+    productDetails.classList.add("flex", "gap-6");
+
+    const productImage = document.createElement("div");
+    productImage.classList.add("h-64", "bg-gray-100", "p-6", "rounded");
+    const imageElement = document.createElement("img");
+    imageElement.id = "checkout-img";
+    imageElement.src = item.image  
+    imageElement.classList.add("w-full", "h-full", "object-contain", "shrink-0");
+    productImage.appendChild(imageElement);
+
+    const productInfo = document.createElement("div");
+
+    const productName = document.createElement("p");
+    productName.id = "checkout-product-name";
+    productName.classList.add("text-md", "font-bold", "text-[#333]");
+    productName.textContent = item.name;
+
+    const productPrice = document.createElement("h4");
+    productPrice.id = "checkout-product-price";
+    productPrice.classList.add("text-xl", "font-bold", "text-[#333]", "mt-4");
+    productPrice.textContent = `$${item.price}`; // Format price with two decimals
+
+    productInfo.appendChild(productName);
+    productInfo.appendChild(productPrice);
+
+    productDetails.appendChild(productImage);
+    productDetails.appendChild(productInfo);
+
+    const removeButton = document.createElement("svg");
+    removeButton.classList.add("w-5", "fill-red-500", "inline", "cursor-pointer");
+    removeButton.setAttribute("viewBox", "0 0 24 24");
+    removeButton.innerHTML = '<path d="M19 7a1 1 0 0 0-1 1v11.191A1.92 1.92 0 0 1 15.99 21H8.01A1.92 1.92 0 0 1 6 19.191V8a1 1 0 0 0-2 0v11.191A3.918 3.918 0 0 0 8.01 23h7.98A3.918 3.918 0 0 0 20 19.191V8a1 1 0 0 0-1-1Zm1-3h-4V2a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v2H4a1 1 0 0 0 0 2h16a1 1 0 0 0 0-2ZM10 4V3h4v1Z" data-original="#000000"></path>';
+    removeButton.innerHTML += '<path d="M11 17v-7a1 1 0 0 0-2 0v7a1 1 0 0 0 2 0Zm4 0v-7a1 1 0 0 0-2 0v7a1 1 0 0 0 2 0Z" data-original="#000000"></path>';
+
+    cartItem.appendChild(productDetails);
+    cartItem.appendChild(removeButton);
+
+    return cartItem;
+  });
+
+  cartItemsContainer.innerHTML = "";
+  cartItemsContainer.append(...cartItemElements);
+
+  var tax = cartItems.length * 3;
+  var shipping = cartItems.length * 2;
+  var total = subtotal + shipping + tax;
+
+  document.getElementById("checkout-product-subtotal").innerText = "$" + subtotal;
+  document.getElementById("checkout-product-shipping").innerText = "$" + shipping;
+  document.getElementById("checkout-product-tax").innerText = "$" + tax;
+  document.getElementById("checkout-product-total").innerText = "$" + total;
 }
